@@ -6,6 +6,7 @@ import {
   RouterModule,
 } from '@angular/router';
 import { IonicModule, IonicRouteStrategy } from '@ionic/angular';
+import { HttpClientModule } from '@angular/common/http';
 @Component({
   selector: 'app-root',
   template: `
@@ -37,6 +38,7 @@ export class AppComponent {}
       ],
       { preloadingStrategy: PreloadAllModules }
     ),
+    HttpClientModule,
   ],
   providers: [{ provide: RouteReuseStrategy, useClass: IonicRouteStrategy }],
   bootstrap: [AppComponent],
