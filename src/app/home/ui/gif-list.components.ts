@@ -13,7 +13,7 @@ import { Gif } from '../../shared/interfaces';
   selector: 'app-gif-list',
   template: `
     <ion-list lines="none">
-      <div class="gif" **ngFor="let gif of gifs; trackBy: trackByFn">
+      <div class="gif" *ngFor="let gif of gifs; trackBy: trackByFn">
         <ion-item button detail="false">
           <video
               playsinline

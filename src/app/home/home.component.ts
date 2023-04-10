@@ -1,7 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, NgModule } from '@angular/core';
+import { ChangeDetectionStrategy, Component, NgModule, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
+import { GifListComponentModule } from './ui/gif-list.components';
+import { RedditService } from '../shared/data-access/reddit.service';
 @Component({
   selector: 'app-home',
   template: `
@@ -11,11 +13,17 @@ import { IonicModule } from '@ionic/angular';
       </ion-toolbar>
     </ion-header>
     <ion-content>
+      <app-gif-list *ngIf="gifs$ | async as gifs" [gifs]="gifs"></app-gif-list>
     </ion-content>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HomeComponent {}
+export class HomeComponent {
+
+  gifs$ = this.redditService.getGifs();
+
+  constructor(private redditService: RedditService) {}
+}
 @NgModule({
   imports: [
     CommonModule,
@@ -26,6 +34,7 @@ export class HomeComponent {}
         component: HomeComponent,
       },
     ]),
+    GifListComponentModule,
   ],
   declarations: [HomeComponent],
 })
