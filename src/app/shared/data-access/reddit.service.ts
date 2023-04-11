@@ -1,27 +1,63 @@
 import { Injectable } from '@angular/core';
-import { EMPTY, catchError, map, of } from 'rxjs';
+import { BehaviorSubject, EMPTY, catchError, concatMap, map, of, scan } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
-import { RedditPost, RedditResponse } from '../interfaces';
+import { RedditPagination, RedditPost, RedditResponse } from '../interfaces';
 
 @Injectable({
   providedIn: 'root',
 })
 export class RedditService {
+
+  private pagination$ = new BehaviorSubject<RedditPagination>({
+    after: null,
+    totalFound: 0,
+    retries: 0,
+    infiniteScroll: null,
+  });
+
   constructor(private http: HttpClient) { }
 
   getGifs() {
-    return this.fetchFromReddit('gifs');
+    // Fetch Gifs
+    const gifsForCurrentPage$ = this.pagination$.pipe(
+      concatMap((pagination) =>
+        this.fetchFromReddit('gifs', 'hot', pagination.after)
+      )
+    );
+    // Every time we get a new batch of gifs, add it to the cached gifs
+    const allGifs$ = gifsForCurrentPage$.pipe(
+      scan((previousGifs, currentGifs) => [...previousGifs, ...currentGifs])
+    );
+    return allGifs$;
   }
 
-  private fetchFromReddit(subreddit: string) {
+  private fetchFromReddit(
+    subreddit: string,
+    sort: string,
+    after: string | null,
+  ) {
     return this.http
       .get<RedditResponse>(
-        `https://www.reddit.com/r/${subreddit}/hot/.json?limit=100`
+        `https://www.reddit.com/r/${subreddit}/${sort}/.json?limit=100` +
+          (after ? `&after=${after}` : '')
       )
       .pipe(
+        // If there is an error, just return an empty observable
+        // This prevents the stream from breaking
         catchError(() => EMPTY),
+        // Convert response into the gif format we need
         map((res) => this.convertRedditPostsToGifs(res.data.children))
       );
+  }
+
+  nextPage(infiniteScrollEvent: Event, after: string) {
+    this.pagination$.next({
+      after,
+      totalFound: 0,
+      retries: 0,
+      infiniteScroll:
+        infiniteScrollEvent?.target as HTMLIonInfiniteScrollElement,
+    });
   }
 
   private convertRedditPostsToGifs(posts: RedditPost[]) {
