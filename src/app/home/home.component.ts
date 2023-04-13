@@ -6,13 +6,17 @@ import { GifListComponentModule } from './ui/gif-list.components';
 import { RedditService } from '../shared/data-access/reddit.service';
 import { BehaviorSubject, combineLatest, map, startWith } from 'rxjs';
 import { Gif } from '../shared/interfaces';
+import { FormControl } from '@angular/forms';
+import { SearchBarComponentModule } from './ui/search-bar.component';
 @Component({
   selector: 'app-home',
   template: `
     <ng-container *ngIf="vm$ | async as vm">
-      <ion-header>
-        <ion-toolbar>
-          <ion-title> Home </ion-title>
+    <ion-header>
+        <ion-toolbar color="primary">
+          <app-search-bar
+            [subredditFormControl]="subredditFormControl"
+          ></app-search-bar>
         </ion-toolbar>
       </ion-header>
       <ion-content>
@@ -42,8 +46,10 @@ export class HomeComponent {
   loadedGifs$ = new BehaviorSubject<string[]>([]);
 
 
+  subredditFormControl = new FormControl('gifs');
+  // Combine the stream of gifs with the streams determining their loading status
   gifs$ = combineLatest([
-    this.redditService.getGifs(),
+    this.redditService.getGifs(this.subredditFormControl),
     this.currentlyLoadingGifs$,
     this.loadedGifs$,
   ]).pipe(
@@ -96,6 +102,7 @@ export class HomeComponent {
       },
     ]),
     GifListComponentModule,
+    SearchBarComponentModule,
   ],
   declarations: [HomeComponent],
 })
