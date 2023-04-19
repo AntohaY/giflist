@@ -1,12 +1,23 @@
-import { ChangeDetectionStrategy, Component, NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
 import {
-  PreloadAllModules,
-  RouteReuseStrategy,
-  RouterModule,
-} from '@angular/router';
+  ChangeDetectionStrategy,
+  Component,
+  NgModule,
+  OnInit,
+} from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { RouteReuseStrategy } from '@angular/router';
+
 import { IonicModule, IonicRouteStrategy } from '@ionic/angular';
+
 import { HttpClientModule } from '@angular/common/http';
+
+import { PreloadAllModules, RouterModule } from '@angular/router';
+
+import { Drivers } from '@ionic/storage';
+import { IonicStorageModule } from '@ionic/storage-angular';
+import * as CordovaSQLiteDriver from 'localforage-cordovasqlitedriver';
+import { SettingsService } from './shared/data-access/settings.service';
+
 @Component({
   selector: 'app-root',
   template: `
@@ -14,15 +25,32 @@ import { HttpClientModule } from '@angular/common/http';
       <ion-router-outlet></ion-router-outlet>
     </ion-app>
   `,
+  styles: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AppComponent {}
+export class AppComponent implements OnInit {
+  constructor(private settingsService: SettingsService) {}
+
+  ngOnInit() {
+    this.settingsService.init();
+  }
+}
+
 @NgModule({
   declarations: [AppComponent],
   entryComponents: [],
   imports: [
     BrowserModule,
     IonicModule.forRoot(),
+    HttpClientModule,
+    IonicStorageModule.forRoot({
+      driverOrder: [
+        // eslint-disable-next-line no-underscore-dangle
+        CordovaSQLiteDriver._driver,
+        Drivers.IndexedDB,
+        Drivers.LocalStorage,
+      ],
+    }),
     RouterModule.forRoot(
       [
         {
@@ -38,7 +66,6 @@ export class AppComponent {}
       ],
       { preloadingStrategy: PreloadAllModules }
     ),
-    HttpClientModule,
   ],
   providers: [{ provide: RouteReuseStrategy, useClass: IonicRouteStrategy }],
   bootstrap: [AppComponent],
