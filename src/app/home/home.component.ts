@@ -8,15 +8,24 @@ import { BehaviorSubject, combineLatest, map, startWith } from 'rxjs';
 import { Gif } from '../shared/interfaces';
 import { FormControl } from '@angular/forms';
 import { SearchBarComponentModule } from './ui/search-bar.component';
+import { SettingsComponentModule } from '../settings/settings.component';
 @Component({
   selector: 'app-home',
   template: `
     <ng-container *ngIf="vm$ | async as vm">
     <ion-header>
-        <ion-toolbar color="primary">
+    <ion-toolbar color="primary">
           <app-search-bar
             [subredditFormControl]="subredditFormControl"
           ></app-search-bar>
+          <ion-buttons slot="end">
+            <ion-button
+              id="settings-button"
+              (click)="settingsModalIsOpen$.next(true)"
+            >
+              <ion-icon slot="icon-only" name="settings"></ion-icon>
+            </ion-button>
+          </ion-buttons>
         </ion-toolbar>
       </ion-header>
       <ion-content>
@@ -36,6 +45,15 @@ import { SearchBarComponentModule } from './ui/search-bar.component';
           >
           </ion-infinite-scroll-content>
         </ion-infinite-scroll>
+        <ion-popover
+          trigger="settings-button"
+          [isOpen]="vm.modalIsOpen"
+          (ionPopoverDidDismiss)="settingsModalIsOpen$.next(false)"
+        >
+          <ng-template>
+            <app-settings></app-settings>
+          </ng-template>
+        </ion-popover>
       </ion-content>
     </ng-container>
   `,
@@ -44,7 +62,7 @@ import { SearchBarComponentModule } from './ui/search-bar.component';
 export class HomeComponent {
   currentlyLoadingGifs$ = new BehaviorSubject<string[]>([]);
   loadedGifs$ = new BehaviorSubject<string[]>([]);
-
+  settingsModalIsOpen$ = new BehaviorSubject<boolean>(false);
 
   subredditFormControl = new FormControl('gifs');
   // Combine the stream of gifs with the streams determining their loading status
@@ -62,9 +80,13 @@ export class HomeComponent {
     )
   );
 
-  vm$ = combineLatest([this.gifs$.pipe(startWith([]))]).pipe(
-    map(([gifs]) => ({
+  vm$ = combineLatest([
+    this.gifs$.pipe(startWith([])),
+    this.settingsModalIsOpen$,
+  ]).pipe(
+    map(([gifs, modalIsOpen]) => ({
       gifs,
+      modalIsOpen,
     }))
   );
 
@@ -103,6 +125,7 @@ export class HomeComponent {
     ]),
     GifListComponentModule,
     SearchBarComponentModule,
+    SettingsComponentModule,
   ],
   declarations: [HomeComponent],
 })
