@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, EMPTY, catchError, concatMap, debounceTime, distinctUntilChanged, map, of, scan, startWith, switchMap, tap } from 'rxjs';
+import { BehaviorSubject, EMPTY, catchError, combineLatest, concatMap, debounceTime, distinctUntilChanged, map, of, scan, startWith, switchMap, tap } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { RedditPagination, RedditPost, RedditResponse } from '../interfaces';
 import { FormControl } from '@angular/forms';
+import { SettingsService } from './settings.service';
 
 @Injectable({
   providedIn: 'root',
@@ -16,7 +17,9 @@ export class RedditService {
     infiniteScroll: null,
   });
 
-  constructor(private http: HttpClient) { }
+  private settings$ = this.settingsService.settings$;
+
+  constructor(private http: HttpClient, private settingsService: SettingsService) { }
 
   getGifs(subredditFormControl: FormControl) {
     // Start with a default emission of 'gifs', then only emit when
@@ -36,12 +39,12 @@ export class RedditService {
       )
     );
 
-    return subreddit$.pipe(
-      switchMap((subreddit) => {
+    return combineLatest([subreddit$, this.settings$]).pipe(
+      switchMap(([subreddit, settings]) => {
         // Fetch Gifs
         const gifsForCurrentPage$ = this.pagination$.pipe(
           concatMap((pagination) =>
-            this.fetchFromReddit(subreddit, 'hot', pagination.after)
+            this.fetchFromReddit(subreddit, settings.sort, pagination.after)
           )
         );
         // Every time we get a new batch of gifs, add it to the cached gifs
