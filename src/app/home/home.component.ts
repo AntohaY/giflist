@@ -27,6 +27,12 @@ import { SettingsComponentModule } from '../settings/settings.component';
             </ion-button>
           </ion-buttons>
         </ion-toolbar>
+        <ion-progress-bar
+          color="dark"
+          *ngIf="vm.isLoading"
+          type="indeterminate"
+          reversed="true"
+        ></ion-progress-bar>
       </ion-header>
       <ion-content>
         <app-gif-list
@@ -57,6 +63,16 @@ import { SettingsComponentModule } from '../settings/settings.component';
       </ion-content>
     </ng-container>
   `,
+  styles: [
+    `
+      ion-infinite-scroll-content {
+        margin-top: 20px;
+      }
+      ion-buttons {
+        margin: auto 0;
+      }
+    `,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HomeComponent {
@@ -82,10 +98,12 @@ export class HomeComponent {
 
   vm$ = combineLatest([
     this.gifs$.pipe(startWith([])),
+    this.redditService.isLoading$,
     this.settingsModalIsOpen$,
   ]).pipe(
-    map(([gifs, modalIsOpen]) => ({
+    map(([gifs, isLoading, modalIsOpen]) => ({
       gifs,
+      isLoading,
       modalIsOpen,
     }))
   );

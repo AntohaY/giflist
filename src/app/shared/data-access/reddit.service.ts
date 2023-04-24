@@ -19,6 +19,8 @@ export class RedditService {
 
   private settings$ = this.settingsService.settings$;
 
+  isLoading$ = new BehaviorSubject(false);
+
   constructor(private http: HttpClient, private settingsService: SettingsService) { }
 
   getGifs(subredditFormControl: FormControl) {
@@ -43,6 +45,7 @@ export class RedditService {
       switchMap(([subreddit, settings]) => {
         // Fetch Gifs
         const gifsForCurrentPage$ = this.pagination$.pipe(
+          tap(() => this.isLoading$.next(true)),
           concatMap((pagination) =>
             this.fetchFromReddit(
               subreddit,
@@ -65,6 +68,7 @@ export class RedditService {
                   gifsRequired > 0 && res.gifs.length && index < maxAttempts;
                 if (!shouldKeepTrying) {
                   pagination.infiniteScroll?.complete();
+                  this.isLoading$.next(false);
                 }
                 return shouldKeepTrying
                   ? this.fetchFromReddit(
