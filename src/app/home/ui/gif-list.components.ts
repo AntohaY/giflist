@@ -57,11 +57,17 @@ import { Browser } from '@capacitor/browser';
     `
       ion-list {
         padding: 0;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(25rem, 1fr));
       }
       ion-label {
         margin: 0;
         padding: 10px 0;
         overflow: auto;
+      }
+      .gif {
+        width: 500px;
+        padding: 30px;
       }
       .gif ion-item {
         --inner-padding-end: 0;

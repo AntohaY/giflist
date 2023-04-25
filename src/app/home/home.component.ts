@@ -19,6 +19,12 @@ import { SettingsComponentModule } from '../settings/settings.component';
             [subredditFormControl]="subredditFormControl"
           ></app-search-bar>
           <ion-buttons slot="end">
+            <ion-button slot="start"
+              id="random-button"
+              (click)="randomSubreddit()"
+            >
+            <ion-icon name="balloon-outline"></ion-icon>
+            </ion-button>
             <ion-button
               id="settings-button"
               (click)="settingsModalIsOpen$.next(true)"
@@ -80,6 +86,10 @@ export class HomeComponent {
   loadedGifs$ = new BehaviorSubject<string[]>([]);
   settingsModalIsOpen$ = new BehaviorSubject<boolean>(false);
 
+  randomSubredditList = ['damnthatsinteresting', 'science', 'highqualitygifs'];
+
+  currentSubreddit$ = new BehaviorSubject<string>('gifs');
+
   subredditFormControl = new FormControl('gifs');
   // Combine the stream of gifs with the streams determining their loading status
   gifs$ = combineLatest([
@@ -129,6 +139,11 @@ export class HomeComponent {
         (permalink) => !this.loadedGifs$.value.includes(permalink)
       ),
     ]);
+  }
+
+  randomSubreddit() {
+    this.currentSubreddit$.next(this.randomSubredditList[Math.floor(Math.random() * this.randomSubredditList.length)]);
+    this.subredditFormControl.patchValue(this.currentSubreddit$.value);
   }
 }
 @NgModule({
