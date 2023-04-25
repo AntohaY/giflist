@@ -66,7 +66,7 @@ import { Browser } from '@capacitor/browser';
         overflow: auto;
       }
       .gif {
-        width: 500px;
+        width: 100%;
         padding: 30px;
       }
       .gif ion-item {

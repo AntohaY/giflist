@@ -13,8 +13,8 @@ import { SettingsComponentModule } from '../settings/settings.component';
   selector: 'app-home',
   template: `
     <ng-container *ngIf="vm$ | async as vm">
-    <ion-header>
-    <ion-toolbar color="primary">
+      <ion-header>
+        <ion-toolbar color="primary">
           <app-search-bar
             [subredditFormControl]="subredditFormControl"
           ></app-search-bar>
@@ -23,7 +23,7 @@ import { SettingsComponentModule } from '../settings/settings.component';
               id="random-button"
               (click)="randomSubreddit()"
             >
-            <ion-icon name="balloon-outline"></ion-icon>
+              <ion-icon name="balloon-outline"></ion-icon>
             </ion-button>
             <ion-button
               id="settings-button"
