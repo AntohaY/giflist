@@ -4,11 +4,12 @@ import { RouterModule } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
 import { GifListComponentModule } from './ui/gif-list.components';
 import { RedditService } from '../shared/data-access/reddit.service';
-import { BehaviorSubject, combineLatest, map, startWith } from 'rxjs';
+import { BehaviorSubject, combineLatest, map, startWith, tap } from 'rxjs';
 import { Gif } from '../shared/interfaces';
 import { FormControl } from '@angular/forms';
 import { SearchBarComponentModule } from './ui/search-bar.component';
 import { SettingsComponentModule } from '../settings/settings.component';
+import { FavouriteSubredditListComponentModule } from './ui/favourite-subreddit-list.component';
 @Component({
   selector: 'app-home',
   template: `
@@ -23,7 +24,13 @@ import { SettingsComponentModule } from '../settings/settings.component';
               id="random-button"
               (click)="randomSubreddit()"
             >
+              Random Subreddit
               <ion-icon name="balloon-outline"></ion-icon>
+            </ion-button>
+            <ion-button
+              (click)="favouriteSubreddit()"
+            >
+              <ion-icon name="star-outline"></ion-icon>
             </ion-button>
             <ion-button
               id="settings-button"
@@ -41,6 +48,11 @@ import { SettingsComponentModule } from '../settings/settings.component';
         ></ion-progress-bar>
       </ion-header>
       <ion-content>
+        <app-favourite-subreddit-list
+          *ngIf="vm.favouriteSubreddits"
+          [favouriteSubredditList]="vm.favouriteSubreddits"
+          (loadSubreddit)="subredditFormControl.patchValue($event)"
+        ></app-favourite-subreddit-list>
         <app-gif-list
           *ngIf="vm.gifs"
           [gifs]="vm.gifs"
@@ -88,7 +100,7 @@ export class HomeComponent {
 
   randomSubredditList = ['damnthatsinteresting', 'science', 'highqualitygifs'];
 
-  currentSubreddit$ = new BehaviorSubject<string>('gifs');
+  favouriteSubreddits$ = new BehaviorSubject<string[]>([]);
 
   subredditFormControl = new FormControl('gifs');
   // Combine the stream of gifs with the streams determining their loading status
@@ -110,11 +122,13 @@ export class HomeComponent {
     this.gifs$.pipe(startWith([])),
     this.redditService.isLoading$,
     this.settingsModalIsOpen$,
+    this.favouriteSubreddits$,
   ]).pipe(
-    map(([gifs, isLoading, modalIsOpen]) => ({
+    map(([gifs, isLoading, modalIsOpen, favouriteSubreddits]) => ({
       gifs,
       isLoading,
       modalIsOpen,
+      favouriteSubreddits
     }))
   );
 
@@ -142,8 +156,15 @@ export class HomeComponent {
   }
 
   randomSubreddit() {
-    this.currentSubreddit$.next(this.randomSubredditList[Math.floor(Math.random() * this.randomSubredditList.length)]);
-    this.subredditFormControl.patchValue(this.currentSubreddit$.value);
+    this.subredditFormControl.patchValue(this.randomSubredditList[Math.floor(Math.random() * this.randomSubredditList.length)]);
+  }
+
+  favouriteSubreddit() {
+    const currentSubreddit = this.subredditFormControl.value || 'gifs';
+
+    if (!this.favouriteSubreddits$.value.includes(currentSubreddit)) {
+      this.favouriteSubreddits$.next([...this.favouriteSubreddits$.value, currentSubreddit]);
+    }
   }
 }
 @NgModule({
@@ -159,6 +180,7 @@ export class HomeComponent {
     GifListComponentModule,
     SearchBarComponentModule,
     SettingsComponentModule,
+    FavouriteSubredditListComponentModule
   ],
   declarations: [HomeComponent],
 })
